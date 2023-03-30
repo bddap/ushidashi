@@ -1,5 +1,6 @@
-use reqwest::{multipart, Client, Error};
+use reqwest::{multipart, Client};
 use serde::Deserialize;
+use serde_json::Value;
 
 #[derive(Deserialize)]
 struct TranscriptionResponse {
@@ -19,9 +20,9 @@ impl OpenAIApiClient {
         }
     }
 
-    pub async fn transcribe_audio(&self, audio_data: &[u8]) -> Result<String, Error> {
+    pub async fn transcribe_audio(&self, audio_data: &[u8]) -> anyhow::Result<String> {
         let model = "whisper-1";
-        let language = "en-US";
+        let language = "en";
         let url = "https://api.openai.com/v1/audio/transcriptions";
         let part = multipart::Part::bytes(audio_data.to_vec()).file_name("audio.wav");
         let form = multipart::Form::new()
@@ -35,10 +36,20 @@ impl OpenAIApiClient {
             .header("Authorization", format!("Bearer {}", self.api_key))
             .multipart(form)
             .send()
-            .await?
-            .error_for_status()?;
+            .await?;
 
-        let transcription_response: TranscriptionResponse = res.json().await?;
+        let status = res.status();
+        let body: Value = res.json().await?;
+        let pretty_body = serde_json::to_string_pretty(&body)?;
+
+        anyhow::ensure!(
+            status.is_success(),
+            "OpenAI API non success. status: {status}\nbody: {pretty_body}",
+        );
+
+        let transcription_response: TranscriptionResponse = serde_json::from_value(body)
+            .map_err(|e| anyhow::anyhow!("Error: {:?}\nBody {:?}", e, pretty_body))?;
+
         Ok(transcription_response.text)
     }
 }

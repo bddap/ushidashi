@@ -1,21 +1,68 @@
 use std::{
-    sync::{atomic::AtomicBool, Once},
+    sync::{
+        atomic::{self, AtomicBool},
+        Arc,
+    },
     thread,
 };
 
 use miniquad::{conf::Conf, Context, EventHandler, KeyCode, KeyMods};
 
-static SPACE_PRESSED: AtomicBool = AtomicBool::new(false);
+/// Button emulator. The button is displayed as a window. Holding down space while the
+/// window is in focus is equivalent to pressing the button.
+pub struct Button {
+    pressed: Arc<AtomicBool>,
 
-struct AppState;
+    /// the worker that is running the window
+    thread: thread::JoinHandle<()>,
+}
+
+impl Button {
+    pub fn create() -> Self {
+        let pressed = Arc::new(AtomicBool::new(false));
+        let pressed_clone = pressed.clone();
+
+        let thread = thread::spawn(move || {
+            AppState {
+                pressed: pressed_clone,
+            }
+            .run();
+        });
+
+        Button { pressed, thread }
+    }
+
+    pub fn pressed(&self) -> Option<bool> {
+        if self.thread.is_finished() {
+            None
+        } else {
+            Some(self.pressed.load(atomic::Ordering::Relaxed))
+        }
+    }
+}
+
+struct AppState {
+    pressed: Arc<AtomicBool>,
+}
+
+impl AppState {
+    fn run(self) {
+        miniquad::start(
+            Conf {
+                window_title: "Spacebar Window".to_owned(),
+                window_width: 800,
+                window_height: 600,
+                ..Default::default()
+            },
+            |_| Box::new(self),
+        );
+    }
+}
 
 impl EventHandler for AppState {
     fn update(&mut self, _ctx: &mut Context) {}
 
-    fn draw(&mut self, ctx: &mut Context) {
-        // Clear the screen to a nice deep blue color
-        ctx.clear(Some((0., 1., 1., 1.)), None, None);
-    }
+    fn draw(&mut self, _ctx: &mut Context) {}
 
     fn key_down_event(
         &mut self,
@@ -25,40 +72,13 @@ impl EventHandler for AppState {
         _repeat: bool,
     ) {
         if keycode == KeyCode::Space {
-            SPACE_PRESSED.store(true, std::sync::atomic::Ordering::Relaxed);
+            self.pressed.store(true, atomic::Ordering::Relaxed);
         }
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: KeyMods) {
         if keycode == KeyCode::Space {
-            SPACE_PRESSED.store(false, std::sync::atomic::Ordering::Relaxed);
+            self.pressed.store(false, atomic::Ordering::Relaxed);
         }
     }
-}
-
-fn run() {
-    miniquad::start(
-        Conf {
-            window_title: "Spacebar Window".to_owned(),
-            window_width: 800,
-            window_height: 600,
-            ..Default::default()
-        },
-        |_| Box::new(AppState),
-    );
-    std::process::exit(0);
-}
-
-pub fn start() {
-    static ONCE: Once = Once::new();
-    ONCE.call_once(|| {
-        thread::spawn(|| {
-            run();
-        });
-    });
-}
-
-// Other threads can access the current state of the spacebar using this method.
-pub fn is_spacebar_pressed() -> bool {
-    SPACE_PRESSED.load(std::sync::atomic::Ordering::Relaxed)
 }
