@@ -2650,23 +2650,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "techakiga"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cpal",
- "hound",
- "iced",
- "miniquad",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
- "toml 0.7.3",
- "xdg",
-]
-
-[[package]]
 name = "tempfile"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2951,6 +2934,23 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+]
+
+[[package]]
+name = "ushidashi"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cpal",
+ "hound",
+ "iced",
+ "miniquad",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "toml 0.7.3",
+ "xdg",
 ]
 
 [[package]]

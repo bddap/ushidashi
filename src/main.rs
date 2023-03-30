@@ -2,7 +2,6 @@ mod api;
 mod audio;
 mod button;
 mod config;
-mod prompt;
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
@@ -12,6 +11,8 @@ use std::time::Duration;
 use crate::api::OpenAIApiClient;
 use crate::audio::to_wav;
 use crate::button::is_spacebar_pressed;
+
+const SYSTEM_PROMPT: &str = include_str!("./system_prompt.txt");
 
 #[tokio::main]
 async fn main() {
