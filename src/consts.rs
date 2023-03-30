@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+pub const POLL_INTERVAL: Duration = Duration::from_millis(16);
 pub const SYSTEM_PROMPT: &str = include_str!("./system_prompt.txt");
 
 #[cfg(test)]
