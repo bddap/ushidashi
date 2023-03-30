@@ -2,6 +2,7 @@ use std::time::Duration;
 
 pub const POLL_INTERVAL: Duration = Duration::from_millis(16);
 pub const SYSTEM_PROMPT: &str = include_str!("./system_prompt.txt");
+pub const PROJECT_NAME: &str = "ushidashi";
 
 #[cfg(test)]
 mod tests {
