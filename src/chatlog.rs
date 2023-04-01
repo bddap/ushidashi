@@ -36,7 +36,7 @@ impl LogMessage {
     }
 }
 
-fn logfile() -> anyhow::Result<PathBuf> {
+pub fn logfile() -> anyhow::Result<PathBuf> {
     let dir = ProjectDirs::from("", "bddap", PROJECT_NAME).ok_or(anyhow::anyhow!(
         "Could not find the config directory for the application."
     ))?;

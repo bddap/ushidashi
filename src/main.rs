@@ -10,7 +10,7 @@ use audio::{play_wav, record_wav};
 use button::Button;
 use chatlog::{Author, LogMessage};
 use consts::{POLL_INTERVAL, SYSTEM_PROMPT};
-use google_tts::TtsClient;
+use google_tts::{Input::Ssml, TtsClient};
 use openai::{ChatCompletionRequest, Message, OpenAIApiClient};
 
 #[tokio::main]
@@ -25,6 +25,8 @@ async fn main() {
 }
 
 async fn run() -> anyhow::Result<()> {
+    eprintln!("chatlog location: {:?}", chatlog::logfile()?);
+
     let secrets = config::Secrets::load()?;
 
     let openai = OpenAIApiClient::new(&secrets.openai_api_key);
@@ -38,8 +40,8 @@ async fn run() -> anyhow::Result<()> {
         }
         let wav = record_wav(&button);
         let text = openai.transcribe_audio(&wav).await?;
-        let next_mesage = get_response(&openai, &text).await?;
-        let wav = tts.synthesize(&next_mesage).await?;
+        let next_message = get_response(&openai, &text).await?;
+        let wav = tts.synthesize(Ssml(next_message)).await?;
         play_wav(&wav)?;
     }
 }

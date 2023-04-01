@@ -17,9 +17,10 @@ struct SynthesizeRequest {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct Input {
-    text: String,
+#[serde(rename_all = "lowercase")]
+pub enum Input {
+    Text(String),
+    Ssml(String),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -51,16 +52,15 @@ impl TtsClient {
         }
     }
 
-    pub async fn synthesize(&self, input_text: &str) -> anyhow::Result<Vec<u8>> {
+    // Adding a new input_type parameter to support sending SSML
+    pub async fn synthesize(&self, input: Input) -> anyhow::Result<Vec<u8>> {
         let url = format!(
             "https://texttospeech.googleapis.com/v1/text:synthesize?key={}",
             self.api_key
         );
 
         let request_body = SynthesizeRequest {
-            input: Input {
-                text: input_text.to_string(),
-            },
+            input,
             voice: Voice {
                 language_code: "en-US".to_string(),
                 name: "en-US-Wavenet-A".to_string(),
