@@ -1,15 +1,17 @@
-mod api;
 mod audio;
 mod button;
 mod chatlog;
 mod config;
 mod consts;
+mod google_tts;
+mod openai;
 
-use api::{ChatCompletionRequest, Message, OpenAIApiClient};
-use audio::record_wav;
+use audio::{play_wav, record_wav};
 use button::Button;
 use chatlog::{Author, LogMessage};
 use consts::{POLL_INTERVAL, SYSTEM_PROMPT};
+use google_tts::TtsClient;
+use openai::{ChatCompletionRequest, Message, OpenAIApiClient};
 
 #[tokio::main]
 async fn main() {
@@ -17,6 +19,7 @@ async fn main() {
         Ok(()) => (),
         Err(e) => {
             eprintln!("Error: {:#?}", e);
+            eprintln!("Error: {}", e);
         }
     }
 }
@@ -24,7 +27,8 @@ async fn main() {
 async fn run() -> anyhow::Result<()> {
     let secrets = config::Secrets::load()?;
 
-    let client = OpenAIApiClient::new(&secrets.openai_api_key);
+    let openai = OpenAIApiClient::new(&secrets.openai_api_key);
+    let tts = TtsClient::new(&secrets.google_tts_api_key);
 
     let button = Button::create();
 
@@ -33,12 +37,14 @@ async fn run() -> anyhow::Result<()> {
             std::thread::sleep(POLL_INTERVAL);
         }
         let wav = record_wav(&button);
-        let text = client.transcribe_audio(&wav).await?;
-        let _next_mesage = get_response(&client, &text).await?;
+        let text = openai.transcribe_audio(&wav).await?;
+        let next_mesage = get_response(&openai, &text).await?;
+        let wav = tts.synthesize(&next_mesage).await?;
+        play_wav(&wav)?;
     }
 }
 
-async fn get_response(client: &OpenAIApiClient, prompt: &str) -> anyhow::Result<String> {
+async fn get_response(openai: &OpenAIApiClient, prompt: &str) -> anyhow::Result<String> {
     // prefix the prompt with a timestamp
     let prompt = format!("{}\n{}", chrono::Local::now(), prompt);
 
@@ -62,7 +68,7 @@ async fn get_response(client: &OpenAIApiClient, prompt: &str) -> anyhow::Result<
         logit_bias: None,
         user: None,
     };
-    let mut response = client.get_completion(request).await?;
+    let mut response = openai.get_completion(request).await?;
 
     anyhow::ensure!(
         response.choices.len() == 1,

@@ -6,6 +6,7 @@ use crate::consts::PROJECT_NAME;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Secrets {
     pub openai_api_key: String,
+    pub google_tts_api_key: String,
 }
 
 impl Secrets {
