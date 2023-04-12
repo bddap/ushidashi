@@ -15,7 +15,8 @@ impl Secrets {
         let path = base
             .find_config_file("secrets.toml")
             .ok_or(anyhow::anyhow!(
-                "No secrets.toml file found. Try logging in with 'refac login'.",
+                "No secrets.toml file found in {:?}.",
+                &base
             ))?;
         let secrets = std::fs::read_to_string(path)?;
         let ret: Secrets = toml::from_str(&secrets)?;
