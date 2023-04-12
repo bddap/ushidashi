@@ -6,7 +6,8 @@ use std::{
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use hound::{WavSpec, WavWriter};
 
-use crate::{button::Button, consts::POLL_INTERVAL};
+use crate::consts::POLL_INTERVAL;
+use crate::Button;
 
 fn to_wav(audio_data_f32: Vec<f32>, config: &cpal::StreamConfig) -> Vec<u8> {
     // Convert f32 samples to i16

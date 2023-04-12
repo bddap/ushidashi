@@ -5,4 +5,4 @@ build-for-pi2:
     #!/usr/bin/env bash
     set -euo pipefail
     export PKG_CONFIG_PATH="/usr/lib/arm-linux-gnueabihf/pkgconfig"
-    cross build --target arm-unknown-linux-gnueabihf --release
+    cross build --target arm-unknown-linux-gnueabihf --release --no-default-features

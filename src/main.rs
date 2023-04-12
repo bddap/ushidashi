@@ -10,6 +10,7 @@ use audio::{play_wav, record_wav};
 use button::Button;
 use chatlog::{Author, LogMessage};
 use consts::{POLL_INTERVAL, SYSTEM_PROMPT};
+
 use google_tts::{Input::Ssml, TtsClient};
 use openai::{ChatCompletionRequest, Message, OpenAIApiClient};
 
